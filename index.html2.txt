@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSE 文人靈魂特質測試</title>
+    <style>
+        :root {
+            --primary-color: #2d3436;
+            --accent-color: #6c5ce7;
+            --bg-color: #f0f2f5;
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #quiz-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        .question { font-size: 1.3rem; margin-bottom: 2rem; color: #2d3436; line-height: 1.5; font-weight: bold; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        button {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+            text-align: left;
+            line-height: 1.4;
+        }
+        button:hover {
+            border-color: var(--accent-color);
+            background: #f8f7ff;
+            transform: translateY(-2px);
+        }
+        #result { display: none; }
+        .progress { font-size: 0.9rem; color: #a0a0a0; margin-bottom: 15px; letter-spacing: 1px; }
+        .result-title { color: var(--accent-color); font-size: 1.8rem; margin-bottom: 1rem; }
+        .result-desc { text-align: left; line-height: 1.8; color: #444; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-left: 5px solid var(--accent-color); }
+        .reload-btn { text-align: center; background: var(--accent-color); color: white; border: none; width: 100%; font-weight: bold; }
+        .reload-btn:hover { background: #5649c0; color: white; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="quiz-content">
+        <div class="progress" id="progress">問題 1 / 10</div>
+        <div class="question" id="question-text">載入中...</div>
+        <div class="options" id="options-container"></div>
+    </div>
+
+    <div id="result">
+        <h3 style="margin:0; color:#888;">你的靈魂原型是</h3>
+        <div class="result-title" id="result-name"></div>
+        <div class="result-desc" id="result-text"></div>
+        <button class="reload-btn" onclick="location.reload()">重新探索靈魂</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "當你遇到巨大挑戰，但身邊的人都嘲笑你「不切實際」時，你的反應是？",
+            options: [
+                { text: "覺得沒關係，他們眼光短淺，不懂燕雀安知鴻鵠之志。", type: "莊子" },
+                { text: "內心感到極度孤單，覺得這世界沒人理解我，情緒陷入低谷。", type: "李清照" },
+                { text: "雖然挫折，但覺得人生不過一場戲，沒必要過分計較。", type: "蘇軾" },
+                { text: "哪怕沒人支持也要孤軍作戰，我會一直等待翻盤的機會。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "在一個下著小雨的黃昏，你獨自待在房間裡，這時你會？",
+            options: [
+                { text: "幻想自己化作清風或飛鳥，在無限的空間裡游蕩。", type: "莊子" },
+                { text: "聽著雨聲想起過去的美好與現在的落魄，愁到吃不下飯。", type: "李清照" },
+                { text: "邀好友喝點小酒聊聊英雄往事，感嘆歲月後豁然開朗。", type: "蘇軾" },
+                { text: "在昏暗燈光下思考還未完成的理想，即使孤獨也堅持著。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "你如何看待「名利」與「成功」？",
+            options: [
+                { text: "那是外在的枷鎖，真正的成功是活出純粹的真自我。", type: "莊子" },
+                { text: "曾經擁有過燦爛，但現在覺得一切都是過眼雲煙，徒留遺憾。", type: "李清照" },
+                { text: "被排擠也無所謂，我可以在平凡生活中找到詩意。", type: "蘇軾" },
+                { text: "理想必須實現！我追求的是純粹的志氣與報國的功名。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "當你感到情緒壓抑需要出口時，你會選擇什麼樣的場景？",
+            options: [
+                { text: "到廣闊的郊外仰望星空，感受宇宙的浩瀚與人類的渺小。", type: "莊子" },
+                { text: "找一個安靜的角落，喝一杯酒或茶，任由憂愁淹沒自己。", type: "李清照" },
+                { text: "前往有歷史感的古蹟，思考前人偉業，排遣自身失落。", type: "蘇軾" },
+                { text: "在熱鬧人群中，默默尋找那個跟自己志同道合的靈魂。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "如果公司或學校突然倒閉了，大家都在恐慌，你的反應是？",
+            options: [
+                { text: "趁機去旅行！躺在草地上看雲，感受與天地合一。", type: "莊子" },
+                { text: "感到莫名的淒涼，想起以前的日子，感嘆好景不常。", type: "李清照" },
+                { text: "感嘆世事無常，然後決定去吃頓好的，寫點東西紀念。", type: "蘇軾" },
+                { text: "憤怒又焦慮，想著還有很多計劃沒完成，想重整旗鼓。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "在社交媒體上，你最常發什麼樣的動態？",
+            options: [
+                { text: "轉發科幻、宇宙縮時攝影，或一些深奧的哲理冷笑話。", type: "莊子" },
+                { text: "拍一張殘花、一杯淡酒，配上幾句感性的文字。", type: "李清照" },
+                { text: "拍下美食美景，或是自黑的段子，展現生活的小確幸。", type: "蘇軾" },
+                { text: "評論時政、轉發具正義感的新聞，或發一些勵志的話。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "如果你被迫搬到荒涼的偏遠山區，你會怎麼活？",
+            options: [
+                { text: "太棒了！終於沒人管我，可以光著腳跑，跟大自然對話。", type: "莊子" },
+                { text: "每天看著對岸，寫詩回顧往事，覺得心靈在日漸枯萎。", type: "李清照" },
+                { text: "帶著當地人種地教書，覺得這裡的山水也別有風味。", type: "蘇軾" },
+                { text: "每天觀察動向，計算著何時能重返「戰場」，保持警覺。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "關於「朋友」，你更傾向哪種交往模式？",
+            options: [
+                { text: "相忘於江湖。大家自由自在，不必經常聯繫，心靈契合。", type: "莊子" },
+                { text: "渴望一個懂自己心事、能一起喝酒賦詩的靈魂伴侶。", type: "李清照" },
+                { text: "朋友遍天下，上至達官貴人下至平民，都能聊得來。", type: "蘇軾" },
+                { text: "只需要幾個志同道合、能共患難奮鬥的「戰友」。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "看到壯麗的大瀑布或高山時，你腦中第一個念頭是？",
+            options: [
+                { text: "宇宙好大，我也想化作一陣風消失在其中。", type: "莊子" },
+                { text: "這麼美的景色，如果「他」還在身邊看該有多好。", type: "李清照" },
+                { text: "想起歷史英雄也曾站在這裡，感嘆自己的挫折很渺小。", type: "蘇軾" },
+                { text: "這裡真是個易守難攻的好地方，若能建功立業就好了。", type: "辛棄疾" }
+            ]
+        },
+        {
+            q: "你認為什麼樣的生命才算「活過」？",
+            options: [
+                { text: "靈魂完全不受世俗價值綁架，像風一樣絕對自由。", type: "莊子" },
+                { text: "深刻地愛過、痛過，在文字中留下了最真摯的感情。", type: "李清照" },
+                { text: "即使遭遇磨難，依然能溫柔對待世界，留下瀟灑背影。", type: "蘇軾" },
+                { text: "為了一個崇高的理想奮鬥終身，不論成敗都無愧於心。", type: "辛棄疾" }
+            ]
+        }
+    ];
+
+    let currentIdx = 0;
+    let scores = { "莊子": 0, "李清照": 0, "蘇軾": 0, "辛棄疾": 0 };
+
+    function loadQuestion() {
+        const currentQuiz = quizData[currentIdx];
+        document.getElementById('progress').innerText = `問題 ${currentIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = currentQuiz.q;
+        const optionsDiv = document.getElementById('options-container');
+        optionsDiv.innerHTML = '';
+
+        currentQuiz.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt.text;
+            btn.onclick = () => selectOption(opt.type);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function selectOption(type) {
+        scores[type]++;
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-content').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        const resultName = document.getElementById('result-name');
+        const resultText = document.getElementById('result-text');
+        resultDiv.style.display = 'block';
+
+        // 找出得分最高的人
+        let winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        
+        const descriptions = {
+            "莊子": "【超然物外的逍遙者】<br>你擁有極強的想像力與精神世界。對你而言，世俗的功名利祿不過是「塵埃」，你追求的是《逍遙遊》中那種不依賴外物的絕對自由。你懂得『無用之用』，能在紛擾的世界中保持心靈的純淨。",
+            "李清照": "【細膩深情的感性者】<br>你觀察敏銳，情感極其豐富。你像《聲聲慢》中所寫，能捕捉到黃昏細雨中最微小的愁緒。你的靈魂雖然易感孤獨，但這也賦予了你無與倫比的藝術氣息與真摯的人格魅力。",
+            "蘇軾": "【豁達優雅的樂觀者】<br>你具備強大的自我療癒能力。即使人生如《赤壁懷古》般充滿起伏與遺憾，你也能以「一尊還鱠江月」的氣度與生活握手言和。你是真正的智者，能將艱苦活成詩意。",
+            "辛棄疾": "【執著熱血的理想者】<br>你內心深處藏著一團火。儘管世界喧囂，你甘願在《青玉案》的「燈火闌珊處」守候自己的原則。你是一個有擔當、有理想的人，即便不被理解，也會為了心中的道義奮鬥到底。"
+        };
+
+        resultName.innerText = winner;
+        resultText.innerHTML = descriptions[winner];
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
